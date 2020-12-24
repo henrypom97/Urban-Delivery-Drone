@@ -26,7 +26,7 @@
 
 コード
 
-marker_detectファイル内を参照
+control内のcontrollerandmarkerdetector.pyかcontrollerandmarkerdetector.pyを参照
 
 
 マーカーの色を抽出し、マーカーの面積から壁とドローンの距離を計測し、制御に活かす。
