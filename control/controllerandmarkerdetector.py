@@ -10,8 +10,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.patches import Polygon
 import datetime
-from tellopy import tellotest
-#import tellopy
+from scipy import stats
 
 drone = tellopy.Tello()
 
@@ -39,39 +38,51 @@ def OpenCV():
       start_time = time.time()                   # time.time UNIX time(0:0:0) karano keika zikan
         
       image_origin = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2BGR)     #RGB convert
-      gray = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2GRAY)
-      #th, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
-      #imagesplit1 = cv2.split(image_origin)
+      image_origin1 = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2BGR)     #RGB convert
 
-      r, g, b = image_origin[:,:,0], image_origin[:,:,1], image_origin[:,:,2]
+      image_origin = cv2.resize(image_origin, dsize = None, fx = 0.5, fy = 0.5) 
+      image_origin1 = cv2.resize(image_origin1, dsize = None, fx = 0.5, fy = 0.5) 
 
-      #Y = 0.299*r + 0.587*g + 0.114*b
-      #Cb = -0.169*r - 0.331*g + 0.500*b
-      #Cr = 0.500*r - 0.419*g - 0.081*b
 
-      #h, w, c = image_origin.shape
-      #for y in range(0, h):
-      #  for x in range(0, w):
-      #    if  Cr[y,x] > 145 and 0 <= g < 100 and 100 <= r <= 255:
-      #      Cr[y,x] = 0
-      #    else:
-      #      Cr[y,x] = 255
-                
-      G = g / gray
+      R = []
+      G = []
+      B = []
 
-      shape = image_origin.shape
-      for y in range(0, shape[0]):
-        for x in range(0, shape[1]):
-          if  G[y,x] < 0.85: 
-            G[y,x] = 255
+      h, w, c = image_origin1.shape
+
+      for y in range(0, h):
+          for x in range(0, w):
+              if image_origin1[y,x,0]/255 >= 15/255 and image_origin1[y,x,1]/255 >= 15/255 and image_origin1[y,x,2]/255 >= 15/255:
+                R.append(image_origin1[y,x,2]/255)
+                B.append(image_origin1[y,x,0]/255)
+                G.append(image_origin1[y,x,1]/255)
+
+      V1 = np.std(R)
+      V2 = np.std(G)
+      V3 = np.std(B)
+
+      mode, count = stats.mode(R)
+      mode1, count1 = stats.mode(G)
+      mode2, count2 = stats.mode(B)
+
+      for y in range(0, h):
+        for x in range(0, w):
+          if  mode - 4.6*V1< image_origin1[y,x,2]/255 < mode + 3*V1:
+            if  mode1 - 4.6*V2 < image_origin1[y,x,1]/255 < mode1 + 4*V2 and mode2 - 4.6*V3 < image_origin1[y,x,0]/255 < mode2 + 4*V3:
+              image_origin1[y,x] = 0
           else:
-            G[y,x] = 0
+            image_origin1[y,x] = 0
 
-      G1 = np.uint8(G)       
+      for y in range(0, h):
+        for x in range(0, w):
+          if  image_origin1[y,x,2] != 0:
+            image_origin1[y,x] = 255     
+      
+      A = np.uint8(image_origin1[:,:,2])
 
       feature_params = {"maxCorners": 4,  "qualityLevel": 0.5,  "minDistance": 30, "blockSize": 5}#10 }  # tokutyoute kensyutu
       #特徴点の上限数 #閾値（高いほど特徴点数は減る) # 特徴点間の距離 (近すぎる点は除外) 30
-      p0 = cv2.goodFeaturesToTrack(G1, mask=None, **feature_params)             
+      p0 = cv2.goodFeaturesToTrack(A, mask=None, **feature_params)             
       p0 = np.int0(p0)
       
       #特徴点をプロットして可視化
@@ -144,12 +155,13 @@ def OpenCV():
         
         S = d1*d2
       
-        cy = shape[0]/2
-        cy1 = shape[0]/3
-        cx = shape[1]/2
+        cy = h/2
+        cy1 = h/3
+        cx = w/2
 
         data = [S,c1,c2,p0,cx,cy,cy1]
         return data
+            
 
       if frame.time_base < 1.0/60:
         time_base = 1.0/60                 #kikai no error wo hanbetu surutame no kizyunn
@@ -263,7 +275,7 @@ def main():
         drone.forward(0)
         time.sleep(3)
       elif dir == 7:
-        drone.down(15)
+        drone.down(30)
         time.sleep(2)
         drone.down(0)
         time.sleep(10)
@@ -271,10 +283,12 @@ def main():
         time.sleep(2)
         drone.up(0)
         time.sleep(3)
-        drone.clockwise(2)
+        drone.clockwise(90)
         time.sleep(2)
         drone.clockwise(0)
-        drone.forward(10)
+        time.sleep(2)
+        drone.forward(20)
+        time.sleep(2)
         drone.land()
         drone.quit()         
   

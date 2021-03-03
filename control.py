@@ -40,21 +40,43 @@ def OpenCV():
         gray = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2GRAY)
         #th, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
         
-        r, g, b = image_origin[:,:,0], image_origin[:,:,1], image_origin[:,:,2]
+        r = image_origin[:,:,2]
+        g = image_origin[:,:,1]
+        b = image_origin[:,:,0]
+
+        R = np.array(r).flatten()
+        G = np.array(g).flatten()
+        B = np.array(b).flatten()
+
+        R = [x for x in R if x > 15]
+        G = [x for x in G if x > 15]
+        B = [x for x in B if x > 15]
+
+        V1 = np.std(R)
+        V2 = np.std(G)
+        V3 = np.std(B)
+
+        mode = sstats.mode(R)[0]
+        mode1 = sstats.mode(G)[0]
+        mode2 = sstats.mode(B)[0]
 
         h, w, c = image_origin.shape
+        for y in range(0, h, 2):
+            for x in range(0, w ,2):      
+                if  mode - 4.7*V1< image_origin[y,x,2] < mode + 4.8*V1:
+                    if  mode1 - 4.8*V2 < image_origin[y,x,1] < mode1 + 4.8*V2 and mode2 - 4.8*V3 < image_origin[y,x,0] < mode2 + 4.8*V3:
+                        image_origin[y,x] = 0
+                        image_origin[y,x+1] = 0
+                        image_origin[y+1,x+1] = 0
+                    else:
+                        image_origin[y,x] = 255
+                else:
+                    image_origin[y,x+1] = 0
+                    image_origin[y,x] = 0
 
-        G = g / gray
+        image_origin = cv2.blur(image_origin, (3, 3))
 
-        #shape = image_origin.shape
-        for y in range(0, h):
-          for x in range(0, w):
-            if  G[y,x] < 0.85: 
-              G[y,x] = 255
-            else:
-              G[y,x] = 0
-
-        G1 = np.uint8(G)       
+        A = np.uint8(image_origin[:,:,2])
 
         feature_params = {"maxCorners": 4,  "qualityLevel": 0.5,  "minDistance": 30, "blockSize": 5}#10 }  # tokutyoute kensyutu
         #  特徴点の上限数 # 閾値　（高いほど特徴点数は減る) # 特徴点間の距離 (近すぎる点は除外) 30
@@ -129,25 +151,12 @@ def OpenCV():
           filename = 'telloimage' + str(frame) + '.jpg'
           cv2.imwrite(filename,image_origin)
           
-          #S = cv2.countNonZero(G1)
-
-          s1 = (d1 + d4 + d5) / 2
-          Sh1 = np.sqrt(s1*(s1-d1)*(s1-d4)*(s1-d5))
-          
-          s2 = (d2 + d3 + d5) / 2
-          Sh2 = np.sqrt(s2*(s2-d2)*(s2-d3)*(s2-d5))
-
-          S = Sh1 + Sh2
-
-          #S = abs((1/2)*((a[3]-a[0])*(b[1]-b[0])-(a[1]-a[0])*(b[3]-b[0])))+abs((1/2)*((a[1]-a[2])*(b[3]-b[2])-(a[3]-a[2])*(b[1]-b[2])))
+          S = cv2.countNonZero(G1)
+          #Sg = abs((1/2)*((a[3]-a[0])*(b[1]-b[0])-(a[1]-a[0])*(b[3]-b[0])))+abs((1/2)*((a[1]-a[2])*(b[3]-b[2])-(a[3]-a[2])*(b[1]-b[2])))
 
           #f = open("tof_2020_11_07_delivery_1support.txt", "a")
           #f.write(S + "\n")
           #f.close()
-
-          with open("S.txt", "a") as f:
-            result = "{:.7f}\n".format(S)
-            f.write(result)
 
           cy = h / 2
           cx = w / 2
@@ -161,6 +170,36 @@ def OpenCV():
           time_base = frame.time_base
           #フレームスキップ値を算出
           frame_skip = int((time.time() - start_time) / time_base)
+
+def down():
+  AAA = OpenCV()
+  S = AAA[0]
+  c1 = AAA[1]
+  c2 = AAA[2]
+  p0 = AAA[3]
+  cx = AAA[4]
+  cy = AAA[5]    
+
+def forward():
+  AAA = OpenCV()
+  S = AAA[0]
+  c1 = AAA[1]
+  c2 = AAA[2]
+  p0 = AAA[3]
+  cx = AAA[4]
+  cy = AAA[5]
+      
+
+def adjust():
+  AAA = OpenCV()
+  S = AAA[0]
+  c1 = AAA[1]
+  c2 = AAA[2]
+  p0 = AAA[3]
+  cx = AAA[4]
+  cy = AAA[5]
+
+      
 
 def main():  
   try:
