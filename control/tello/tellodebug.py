@@ -25,7 +25,7 @@ class Tello(object):
     EVENT_CONNECTED = event.Event('connected')
     EVENT_WIFI = event.Event('wifi')
     EVENT_LIGHT = event.Event('light')
-    EVENT_FLIGHT_DATA = event.Event('fligt_data')
+    EVENT_FLIGHT_DATA = event.Event('flight_data')
     EVENT_LOG_HEADER = event.Event('log_header')
     EVENT_LOG = EVENT_LOG_HEADER
     EVENT_LOG_RAWDATA = event.Event('log_rawdata')
@@ -68,7 +68,7 @@ class Tello(object):
         self.debug = False
         self.pkt_seq_num = 0x01e4
         self.port = port
-        self.udpsize = 2000
+        self.udpsize = 2000 #2000 ビデオのところでバイトがぶつかってた
         self.left_x = 0.0
         self.left_y = 0.0
         self.right_x = 0.0
@@ -107,7 +107,7 @@ class Tello(object):
         dispatcher.connect(self.__state_machine, dispatcher.signal.All)
         threading.Thread(target=self.__recv_thread).start()
         threading.Thread(target=self.__video_thread).start()
-
+    
         """
         クラスの初期化．ローカルのIP/ポートをバインドし，Telloをコマンドモードにする．
 
@@ -126,7 +126,7 @@ class Tello(object):
         self.imperial = imperial    # 速度と距離の単位を選択
         self.response = None    # Telloが応答したデータが入る
 
-        self.last_height = 0                            # get_heightで確認した最終の高度
+        self.last_height = 0                            #get_heightで確認した最終の高度
         #local_ip = ""
         #local_port = 8889
         #self.sock.bind(local_ip, local_port)        # コマンド受信のUDPサーバのスタート(バインド)
@@ -782,7 +782,7 @@ class Tello(object):
         while self.state != self.STATE_QUIT:
 
             if self.state == self.STATE_CONNECTED:
-                self.__send_stick_command()  # ignore errors
+                self.__send_stick_command()  #ignore errors
 
             try:
                 data, server = sock.recvfrom(self.udpsize)
@@ -800,7 +800,7 @@ class Tello(object):
 
     def __video_thread(self):
         log.info('start video thread')
-        # Create a UDP socket
+        #Create a UDP socket
         #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         port = 6038
         sock.bind(('', port))
@@ -848,7 +848,7 @@ class Tello(object):
                     prev_ts = history[0][0]
                     for i in range(1, len(history)):
                         [ ts, sz, sn ] = history[i]
-                        print('    %02d:%02d:%02d.%03d %4d bytes %04x +%03d%s' %
+                        print('%02d:%02d:%02d.%03d %4d bytes %04x +%03d%s' %
                               (ts.hour, ts.minute, ts.second, ts.microsecond/1000,
                                sz, sn, (ts - prev_ts).total_seconds()*1000,
                                (' *' if i == len(history) - 1 else '')))
@@ -886,15 +886,13 @@ class Tello(object):
         log.info('exit from the video thread.')
 
 
-
-
     def _receive_thread(self):
-        """
-        Telloからの応答を監視する
+        
+        #Telloからの応答を監視する
 
-        スレッドとして走らせる．Telloが最後に返した応答をself.responseに格納する
+        #スレッドとして走らせる．Telloが最後に返した応答をself.responseに格納する
 
-        """
+        
         while True:
             try:
                 self.response, ip = self.sock.recvfrom(3000)      # Telloからの応答を受信（最大3000バイトまで一度に受け取れる）
@@ -971,6 +969,20 @@ class Tello(object):
             speed = int(round(speed * 27.7778))     # km/h -> cm/s
 
         return self.send_command('speed %s' % speed)
+
+    def get_height(self):
+        """Get current height in cm
+        Returns:
+            int: height in cm
+        """
+        return self.get_state_field('h')
+
+    def get_distance_tof(self):
+        """Get current distance value from TOF in cm
+        Returns:
+            int: TOF distance in cm
+        """
+        return self.get_state_field('tof')
 
     def rotate_cw(self, degrees):
         """
@@ -1145,23 +1157,24 @@ class Tello(object):
 
         return self.move('up', distance)
 
+
     def statedata(self):
         INTERVAL = 0.5 # スリープ時間の設定．0.2秒
         
         local_ip = '' # '0.0.0.0'と同じ意味．すなわち「全てのネットワークインターフェイスを使う」
         local_port = 8890 # ステータス受信は8890ポート
-        #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # ソケットを作成
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # ソケットを作成
         sock.bind((local_ip, local_port)) # サーバー側はバインドが必要
 
         # 最初に"command"を送ってSDKモードを開始しないとステータスが出てこない
         
-        #self.sock.sendto('command'.encode('utf-8'), self.tello_addr)
+        self.sock.sendto('command'.encode('utf-8'), self.tello_addr)
 
         # Ctrl + cが押されるまで繰り返す
         while True: # 永久ループ
             response, ip = sock.recvfrom(1024) # 受信は最大1024バイトまで．受信結果はresponse変数に入る
             # 受信データに手を加える
-            response = response.decode("utf-8").split(";")
+            response = self.response.decode("utf-8").split(";")
             if len(response) > 10:
                 RESPONSE = response
                 tof = response[8] 

@@ -32,18 +32,13 @@ if __name__ == "__main__": # "python tello_state.py"として実行されたか�
             if len(response) > 10:
                 RESPONSE = response
                 tof = response[8] 
-            #response2 = int.from_bytes(response, "little")
-             # セミコロンの部分に改行コードを挿入
-            #out = response.replace(';', ';\n') # セミコロンの部分に改行コードを挿入
-            #out = 'Tello State:\n' + out # 冒頭部分にちょっと装飾
-            #responce = re.search('tof:',response)
+                #response2 = int.from_bytes(response, "little")
+                # セミコロンの部分に改行コードを挿入
+                #out = response.replace(';', ';\n') # セミコロンの部分に改行コードを挿入
+                #out = 'Tello State:\n' + out # 冒頭部分にちょっと装飾
+                #responce = re.search('tof:',response)
                 tof = re.sub(r"tof:", "", tof)   
                 tof = int(tof)
                 print(tof)
-            #print(out[14]) # 上の方に定義されているreport関数を使って画面出力する
-            #sleep(INTERVAL) # 一定時間待つ
-    except KeyboardInterrupt:
-        # ctrl + cが押されたあとの終了処理
-        curses.echo()
-        curses.nocbreak()
-        curses.endwin()
+                #print(out[14]) 上の方に定義されているreport関数を使って画面出力する
+                #sleep(INTERVAL) 一定時間待つ

@@ -24,7 +24,7 @@ class Tello(object):
     EVENT_CONNECTED = event.Event('connected')
     EVENT_WIFI = event.Event('wifi')
     EVENT_LIGHT = event.Event('light')
-    EVENT_FLIGHT_DATA = event.Event('fligt_data')
+    EVENT_FLIGHT_DATA = event.Event('flight_data')
     EVENT_LOG_HEADER = event.Event('log_header')
     EVENT_LOG = EVENT_LOG_HEADER
     EVENT_LOG_RAWDATA = event.Event('log_rawdata')
@@ -137,6 +137,7 @@ class Tello(object):
     def connect(self):
         """Connect is used to send the initial connection request to the drone."""
         self.__publish(event=self.__EVENT_CONN_REQ)
+        
 
     def wait_for_connection(self, timeout=None):
         """Wait_for_connection will block until the connection is established."""

@@ -317,6 +317,8 @@ class LogData(object):
         if isinstance(data, bytearray):
             data = str(data)
 
+            print(data)
+
         self.log.debug('LogData: data length=%d' % len(data))
         self.count += 1
         pos = 0
@@ -360,6 +362,8 @@ class LogNewMvoFeedback(object):
         self.pos_x = 0.0
         self.pos_y = 0.0
         self.pos_z = 0.0
+        self.height = 0.0
+        self.tof = 0.0
         if (data != None):
             self.update(data, count)
 
@@ -395,6 +399,9 @@ class LogNewMvoFeedback(object):
 class LogImuAtti(object):
     def __init__(self, log = None, data = None):
         self.log = log
+
+        self.data = 0.0
+
         self.count = 0
         self.acc_x = 0.0
         self.acc_y = 0.0
@@ -409,38 +416,42 @@ class LogImuAtti(object):
         self.vg_x = 0.0
         self.vg_y = 0.0
         self.vg_z = 0.0
+        self.tof = 0.0
+        self.height = 0.0
         if (data != None):
             self.update(data)
 
     def __str__(self):
         return (
-            ("ACC: %5.2f %5.2f %5.2f" % (self.acc_x, self.acc_y, self.acc_z)) +
-            (" GYRO: %5.2f %5.2f %5.2f" % (self.gyro_x, self.gyro_y, self.gyro_z)) +
-            (" QUATERNION: %5.2f %5.2f %5.2f %5.2f" % (self.q0, self.q1, self.q2, self.q3)) +
-            (" VG: %5.2f %5.2f %5.2f" % (self.vg_x, self.vg_y, self.vg_z)) +
+            ("data" % (self.data))
+            #("ACC: %5.2f %5.2f %5.2f" % (self.acc_x, self.acc_y, self.acc_z)) +
+            #(" GYRO: %5.2f %5.2f %5.2f" % (self.gyro_x, self.gyro_y, self.gyro_z)) +
+            #(" QUATERNION: %5.2f %5.2f %5.2f %5.2f" % (self.q0, self.q1, self.q2, self.q3)) +
+            #(" VG: %5.2f %5.2f %5.2f" % (self.vg_x, self.vg_y, self.vg_z)) +
             "")
 
     def format_cvs(self):
         return (
-            ("%f,%f,%f" % (self.acc_x, self.acc_y, self.acc_z)) +
-            (",%f,%f,%f" % (self.gyro_x, self.gyro_y, self.gyro_z)) +
-            (",%f,%f,%f,%f" % (self.q0, self.q1, self.q2, self.q3)) +
-            (",%f,%f,%f" % (self.vg_x, self.vg_y, self.vg_z)) +
+            #("%f,%f,%f" % (self.acc_x, self.acc_y, self.acc_z)) +
+            #(",%f,%f,%f" % (self.gyro_x, self.gyro_y, self.gyro_z)) +
+            #(",%f,%f,%f,%f" % (self.q0, self.q1, self.q2, self.q3)) +
+            #(",%f,%f,%f" % (self.vg_x, self.vg_y, self.vg_z)) +
             "")
 
     def format_cvs_header(self):
         return (
-            "imu.acc_x,imu.acc_y,imu.acc_z" +
-            ",imu.gyro_x,imu.gyro_y,imu.gyro_z" +
-            ",imu.q0,imu.q1,imu.q2, self.q3" +
-            ",imu.vg_x,imu.vg_y,imu.vg_z" +
+            #"imu.acc_x,imu.acc_y,imu.acc_z" +
+            #",imu.gyro_x,imu.gyro_y,imu.gyro_z" +
+            #",imu.q0,imu.q1,imu.q2, self.q3" +
+            #",imu.vg_x,imu.vg_y,imu.vg_z" +
             "")
 
     def update(self, data, count = 0):
         self.log.debug('LogImuAtti: length=%d %s' % (len(data), byte_to_hexstring(data)))
         self.count = count
-        (self.acc_x, self.acc_y, self.acc_z) = struct.unpack_from('fff', data, 20)
-        (self.gyro_x, self.gyro_y, self.gyro_z) = struct.unpack_from('fff', data, 32)
-        (self.q0, self.q1, self.q2, self.q3) = struct.unpack_from('ffff', data, 48)
-        (self.vg_x, self.vg_y, self.vg_z) = struct.unpack_from('fff', data, 76)
+        data = struct.unpack('f', data)
+        #(self.acc_x, self.acc_y, self.acc_z) = struct.unpack_from('fff', data, 20)
+        #(self.gyro_x, self.gyro_y, self.gyro_z) = struct.unpack_from('fff', data, 32)
+        #(self.q0, self.q1, self.q2, self.q3) = struct.unpack_from('ffff', data, 48)
+        #(self.vg_x, self.vg_y, self.vg_z) = struct.unpack_from('fff', data, 76)
         self.log.debug('LogImuAtti: ' + str(self))

@@ -11,7 +11,7 @@ import pandas as pd
 from matplotlib.patches import Polygon
 import datetime
 
-drone = tellopy.Tello()
+drone = tellopy.Tello()   #Telloのクラスを呼び起こす
 
 def OpenCV():
 
@@ -26,19 +26,18 @@ def OpenCV():
         print(ave)
         print('retry...')
             
-    frame_skip = 300                               #douga setuzokumaeno 
+    frame_skip = 300                               #動画接続前の
         
     while True:
-      for frame in container.decode(video=0):         # .decode byte(eizou no nakami) -> moziretu
+      for frame in container.decode(video=0):         # .decode byte(映像の中身) ->  文字列　frameを画像変換
         if 0 < frame_skip: #フレームスキップ処理
           frame_skip = frame_skip - 1
           continue
             
-        start_time = time.time()                   # time.time UNIX time(0:0:0) karano keika zikan
+        start_time = time.time()                   # time.time UNIX time(0:0:0) からの経過時間
           
-        image_origin = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2BGR)     #RGB convert
+        image_origin = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2BGR)     #RGB convert    string -> image
         gray = cv2.cvtColor(np.array(frame.to_image()), cv2.COLOR_RGB2GRAY)
-        #th, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU)
         
         r, g, b = image_origin[:,:,0], image_origin[:,:,1], image_origin[:,:,2]
 
@@ -56,19 +55,19 @@ def OpenCV():
 
         G1 = np.uint8(G)       
 
-        feature_params = {"maxCorners": 4,  "qualityLevel": 0.5,  "minDistance": 30, "blockSize": 5}#10 }  # tokutyoute kensyutu
-        #  特徴点の上限数 # 閾値　（高いほど特徴点数は減る) # 特徴点間の距離 (近すぎる点は除外) 30
+        feature_params = {"maxCorners": 4,  "qualityLevel": 0.5,  "minDistance": 30, "blockSize": 5}#10 }  #特徴点検出
+        #特徴点の上限数 , 閾値　（高いほど特徴点数は減る) , 特徴点間の距離 (近すぎる点は除外) 30
         p0 = cv2.goodFeaturesToTrack(G1, mask=None, **feature_params)             
         p0 = np.int0(p0)
         
-        # 特徴点をプロットして可視化
+        #特徴点をプロットして可視化
         if len(p0) == 4:
-          for p in p0:               #p0 x,y zahyou 3image_origin
-            x,y = p.ravel()                                             #p0 no youso wo bunkai
+          for p in p0:               #p0 x,y 座標
+            x,y = p.ravel()                                             #p0の要素を分解
             cv2.circle(image_origin, (x, y), 5, (0, 255, 255) , -1)
                     
-            x0 = p0[:,:,0].ravel()                                             #x zahyou 
-            y0 = p0[:,:,1].ravel()                                             #y zahyou
+            x0 = p0[:,:,0].ravel()                                             #x座標 
+            y0 = p0[:,:,1].ravel()                                             #y座標
             l1 = np.sqrt((x0[0])**2+(y0[0])**2)
             l2 = np.sqrt((x0[1])**2+(y0[1])**2)
             l3 = np.sqrt((x0[2])**2+(y0[2])**2)
@@ -119,7 +118,7 @@ def OpenCV():
           line3 = cv2.line(image_origin,(a[2],b[2]),(a[3],b[3]),1000)
           line4 = cv2.line(image_origin,(a[3],b[3]),(a[0],b[0]),1000)
         
-          #tyuuten
+          #中点
           c1 = (a[0]+a[2]) / 2
           c2 = (b[0]+b[2]) / 2
           c11 = int(c1)
@@ -131,23 +130,32 @@ def OpenCV():
           
           #S = cv2.countNonZero(G1)
 
-          s1 = (d1 + d4 + d5) / 2
-          Sh1 = np.sqrt(s1*(s1-d1)*(s1-d4)*(s1-d5))
+          #s1 = (d1 + d4 + d5) / 2
+          #Sh1 = np.sqrt(s1*(s1-d1)*(s1-d4)*(s1-d5))
           
-          s2 = (d2 + d3 + d5) / 2
-          Sh2 = np.sqrt(s2*(s2-d2)*(s2-d3)*(s2-d5))
+          #s2 = (d2 + d3 + d5) / 2
+          #Sh2 = np.sqrt(s2*(s2-d2)*(s2-d3)*(s2-d5))
 
-          S = Sh1 + Sh2
+          #S = Sh1 + Sh2
 
-          #S = abs((1/2)*((a[3]-a[0])*(b[1]-b[0])-(a[1]-a[0])*(b[3]-b[0])))+abs((1/2)*((a[1]-a[2])*(b[3]-b[2])-(a[3]-a[2])*(b[1]-b[2])))
+          S = abs((1/2)*((a[3]-a[0])*(b[1]-b[0])-(a[1]-a[0])*(b[3]-b[0])))+abs((1/2)*((a[1]-a[2])*(b[3]-b[2])-(a[3]-a[2])*(b[1]-b[2])))
 
-          #f = open("tof_2020_11_07_delivery_1support.txt", "a")
-          #f.write(S + "\n")
-          #f.close()
-
-          with open("S.txt", "a") as f:
+          with open("S 2021.3.16 7:24.txt", "a") as f:
             result = "{:.7f}\n".format(S)
             f.write(result)
+
+          with open("d1 2021.3.16 7:24.txt", "a") as f:
+            result = "{:.7f}\n".format(S)
+            f.write(result)
+
+          with open("d2 2021.3.16 7:24.txt", "a") as f:
+            result = "{:.7f}\n".format(d2)
+            f.write(result)
+
+
+          print(S)
+          print(d1)
+          print(d2)
 
           cy = h / 2
           cx = w / 2
@@ -156,15 +164,15 @@ def OpenCV():
           return data
 
         if frame.time_base < 1.0/60:
-          time_base = 1.0/60                 #kikai no error wo hanbetu surutame no kizyunn
+          time_base = 1.0/60                 #機械のエラーを判別するための基準
         else:
           time_base = frame.time_base
           #フレームスキップ値を算出
           frame_skip = int((time.time() - start_time) / time_base)
 
 def main():  
+  
   try:
-
     drone.connect()                         #tello connection
     drone.wait_for_connection(60.0)
 
@@ -277,15 +285,14 @@ def main():
         time.sleep(10)
         drone.down(0)
         time.sleep(20)
-        #drone.up(20)
-        #time.sleep(10)
-        #drone.up(0)
-        #time.sleep(5)
-        #drone.land()
+        drone.up(20)
+        time.sleep(10)
+        drone.up(0)
+        
 
   except Exception as ex:
-    exc_type, exc_value, exc_traceback = sys.exc_info()                  # zikkoutyuuno sagyou no zyouhou teizi
-    traceback.print_exception(exc_type, exc_value, exc_traceback)        # zikkoukatei deno stuck frame no kiroku wo print
+    exc_type, exc_value, exc_traceback = sys.exc_info()                  #実況中の作業の座標提示
+    traceback.print_exception(exc_type, exc_value, exc_traceback)        #実行過程でのstuck frameの記録をプリント
     print(ex)
   finally:
     drone.land()
